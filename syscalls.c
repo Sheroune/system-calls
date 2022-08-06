@@ -8,21 +8,21 @@
 
 int interrupts = 0;
 
-char prqueue[] = "files/lpqres.txt";	// вся информация об очереди на печать
-char result[] = "result.txt";	// финальный список файлов в очереди на печать
+char prqueue[] = "files/lpqres.txt";	// all information about print queue
+char result[] = "result.txt";	// final list of files in the print queue 
 
 int flag = 1;
 int flag_q = 0;
 
-// функция обработки прерываний
+// interrupt handler function
 void interrupt_handler(){
-    interrupts++;
+    	interrupts++;
 	flag = 0;
 	
 	if(flag_q == 0 && interrupts != 3)
-		printf("\nВведите q, чтобы выйти, или Ctrl+C три раза, чтобы показать число файлов в очереди на печать\n");
+		printf("\nType 'q' to exit the program or press Ctrl+C 3 times to show number of files in the print queue\n");
 	
-    if (interrupts == 3){
+    	if (interrupts == 3){
 		int pipe_descriptors[2];
 		pipe(pipe_descriptors);
 		
@@ -40,52 +40,53 @@ void interrupt_handler(){
 			read(pipe_descriptors[0], buffer, 1000);
 			
 			sscanf(buffer, "%d", &res);
-			printf("\nКоличество файлов на печать: %d\n", res);
+			printf("\nNumber of files in the print queue: %d\n", res);
 			exit(0);
 		}
     }
 }
 
 int main(){
-	// обработка прерываний
-	struct sigaction keyboard_interrupt;					
-    keyboard_interrupt.sa_handler = interrupt_handler;		
-    sigemptyset(&keyboard_interrupt.sa_mask); 
-    sigprocmask(0,0,&keyboard_interrupt.sa_mask);
-	keyboard_interrupt.sa_flags = 0;         
-    sigaction(SIGINT, &keyboard_interrupt, 0); 	
+    	// interrupt handling
+    	struct sigaction keyboard_interrupt;					
+   	keyboard_interrupt.sa_handler = interrupt_handler;		
+    	sigemptyset(&keyboard_interrupt.sa_mask); 
+  	sigprocmask(0,0,&keyboard_interrupt.sa_mask);
+    	keyboard_interrupt.sa_flags = 0;         
+    	sigaction(SIGINT, &keyboard_interrupt, 0); 	
 	
 	char buffer[1000];
 	char word[256];
-
-	int fd_in, fd_out;	// файловые дескрипторы
 	
-	// параллельный процесс
+	// file descriptors
+	int fd_in, fd_out;	
+	
+	// making parallel process
 	if(fork() == 0){
 		fd_in = open(prqueue, O_RDONLY);
 		dup2(fd_in, 0);
 		close(fd_in);
 		
 		if(fd_in == -1){
-			fprintf(stderr, "Не удалось прочитать файл %s", prqueue);
+			fprintf(stderr, "Can't read file %s", prqueue);
 			exit(1);
 		}
 		
 		else{
-			fd_out = open(result, O_TRUNC|O_WRONLY|O_CREAT, 0777);	// S_IRWXU
+			fd_out = open(result, O_TRUNC|O_WRONLY|O_CREAT, 0777);	// S_IRWXU flag
 			dup2(fd_out, 1);
 			close(fd_out);
 			
 			if(fd_out == -1){
-				fprintf(stderr, "Не удалось записать в файл %s", result);
+				fprintf(stderr, "Can't write to file %s", result);
 				exit(1);
 			}
 			
 			else{									
-				fgets(buffer, sizeof(buffer), stdin);				// пропускаем первую запись (заголовки)
+				fgets(buffer, sizeof(buffer), stdin);				// skipping the first line (headers)
 				while(fgets(buffer, sizeof(buffer), stdin)){			
-					sscanf(buffer, "%*s%*s%*s%s", word);			// получение имени файлов из очереди на печать
-					printf("%s\n", word);							// запись этой информации в файл			
+					sscanf(buffer, "%*s%*s%*s%s", word);			// getting names of files in the print queue
+					printf("%s\n", word);					// writing this information to file			
 				}
 			}
 		}
@@ -100,20 +101,20 @@ int main(){
 		close(fd_result);
 	
 		if(fd_result == -1){
-			fprintf(stderr, "Не удалось прочитать файл %s\n\n", result);
+			fprintf(stderr, "Can't read file %s\n\n", result);
 			exit(1);
 		}
 		
-		// вывод содержимого файлов на экран
+		// printing contents of files to the stdout
 		while(fgets(word, sizeof(word), stdin)){
 			word[strcspn(word, "\n")] = 0;
-			printf("Содержимое файла %s:\n", word);
+			printf("Content of file %s:\n", word);
 			
 			char dir[] = "files/";
 			strcat(dir, word);
 			int fd = open(dir, O_RDONLY);
 			if(fd == -1){
-				printf("Не удалось прочитать файл %s\n\n", word);
+				printf("Can't read file %s\n\n", word);
 			}
 			else{
 				char c;
@@ -126,7 +127,7 @@ int main(){
 		close(0);
 		
 		int test = open("/dev/tty", 0);
-		printf("Введите q, чтобы выйти, или Ctrl+C три раза, чтобы показать число файлов в очереди на печать\n");
+		printf("Type 'q' to exit the program or press Ctrl+C 3 times to show number of files in the print queue\n");
 		char t[2];
 		while(1){
 			if(flag == 0)
