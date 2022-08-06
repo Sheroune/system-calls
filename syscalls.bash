@@ -1,47 +1,47 @@
 #!/bin/bash
 
-# число прерываний
+# number of interrupts
 counter=0
 
-# при доступном принтере lpq > lpqres.txt
+# if printer is available use lpq > files/lpqres.txt
 filename='files/lpqres.txt'
 
-# проверка существования файла
+# checking if the file exists
 if [ ! -r "$filename" ]; then
-	echo "Файл $filename не найден"
+	echo "File $filename not found"
 	exit 0
 fi
 
-# обработчик прерываний
+# interrupt handler
 prer(){
 	echo ''
 	counter=$((counter+1))
 	if [ $counter -ge 3 ]; then
-		echo "Количество файлов в очереди на печать:"
+		echo "Number of files in the print queue:"
 		cat "$filename" | wc -l
 		exit 0
 	fi
 }
 
-# переписать SIGINT
+# rewrite SIGINT
 trap "prer" 2
 
-# вывод содержимого файлов на печать
+# printing in the terminal the contents of files
 for file in $(tail -n `wc -l $filename` | cut -f 4)
 do
-	echo "Содержимое файла $file:"
+	echo "Content of file $file:"
 	if [ ! -r "files/$file" ]; then
-		echo -e "Файл $file не найден\n"
+		echo -e "File $file not found\n"
 	else
 		cat "files/$file"
 		echo -e "\n"
 	fi
 done
 
-# цикл для проверки прерываний
+# while loop for checking interrupts
 while true
 do
-	echo 'Введите exit, чтобы выйти, или Ctrl+C три раза, чтобы показать число файлов в очереди на печать'
+	echo 'Type "exit" to exit the program or press Ctrl+C 3 times to show number of files in the print queue'
 	read command
 	if [ "$command" = "exit" ]; then
 		exit 0
