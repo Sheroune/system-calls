@@ -1,0 +1,4 @@
+Rank	Owner	Job	File(s)				Total Size
+active	user	59	demo				399360 bytes
+1st	user	60	(stdin)				0 bytes
+2nd	user	61	test.txt			11 bytes
