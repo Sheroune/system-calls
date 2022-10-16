@@ -12,7 +12,7 @@ C program:
 `./a.out`  
   
 Bash script:  
-`./a.out`
+`./syscalls.bash`
 
 ## Example output
 
